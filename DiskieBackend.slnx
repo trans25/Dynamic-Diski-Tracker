@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Diskie.API/Diskie.API.csproj" />
+  <Project Path="Diskie.DataAccess.Contracts/Diskie.DataAccess.Contracts.csproj" Id="61908275-f1d3-4fc1-89c6-53738f37be4a" />
+  <Project Path="Diskie.DataAccess.Model/Diskie.DataAccess.Model.csproj" Id="5b3ea650-c43d-475c-95ae-edde8623b3f7" />
+  <Project Path="Diskie.DataAccess.Repository/Diskie.DataAccess.Repository.csproj" />
+</Solution>
