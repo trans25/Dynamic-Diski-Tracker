@@ -36,5 +36,34 @@ namespace Diskie.API.Controllers.Coach
                 ? BadRequest(ApiResponse<object>.Fail("Team not found or not assigned to you", "400"))
                 : CreatedResponse(nameof(Get), new { }, announcement);
         }
+
+        [HttpPut("{id:guid}")]
+        [ProducesResponseType(typeof(ApiResponse<AnnouncementViewModel>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<AnnouncementViewModel>>> Update(
+            Guid id, [FromBody] UpdateAnnouncementViewModel model, CancellationToken cancellationToken)
+        {
+            if (id != model.Id)
+            {
+                return BadRequest(ApiResponse<object>.Fail("Route id and body id do not match", "400"));
+            }
+
+            var announcement = await _coachService.UpdateAnnouncementAsync(model, cancellationToken);
+            return announcement is null
+                ? NotFoundResponse("Announcement not found or not assigned to you")
+                : OkResponse(announcement, "Announcement updated");
+        }
+
+        [HttpDelete("{id:guid}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ApiResponse<object>>> Delete(Guid id, CancellationToken cancellationToken)
+        {
+            var deleted = await _coachService.DeleteAnnouncementAsync(id, cancellationToken);
+            return deleted
+                ? OkResponse<object>(new { id }, "Announcement deleted")
+                : NotFoundResponse("Announcement not found or not assigned to you");
+        }
     }
 }

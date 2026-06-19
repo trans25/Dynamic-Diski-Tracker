@@ -10,7 +10,10 @@ namespace Diskie.DataAccess.Model.Models.ViewModels
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public string? LogoUrl { get; set; }
+        public Guid? AssignedSportTemplateId { get; set; }
+        public string? AssignedSportTemplateName { get; set; }
         public bool IsActive { get; set; }
+        public bool IsApproved { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
     }

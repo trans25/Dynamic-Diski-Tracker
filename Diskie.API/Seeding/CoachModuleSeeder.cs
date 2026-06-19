@@ -9,7 +9,9 @@ namespace Diskie.API.Seeding
     /// <summary>
     /// Idempotent development seeder that creates a single tenant with a Coach user,
     /// one team assigned to that coach, and one player on the roster. A second tenant
-    /// with its own coach is also created so tenant-isolation can be verified.
+    /// with its own coach is also created so tenant-isolation can be verified. An
+    /// additional standalone coach is also provisioned (idempotent on its email) so a
+    /// fresh coach login is always available even on an already-seeded database.
     /// Users and roles are provisioned through ASP.NET Identity. Intended for Development only.
     /// </summary>
     public static class CoachModuleSeeder
@@ -24,6 +26,15 @@ namespace Diskie.API.Seeding
         {
             await SeedRolesAsync(roleManager);
 
+            await SeedInitialDataAsync(context, userManager, cancellationToken);
+            await SeedExtraCoachAsync(context, userManager, cancellationToken);
+        }
+
+        private static async Task SeedInitialDataAsync(
+            DiskiDbContext context,
+            UserManager<User> userManager,
+            CancellationToken cancellationToken)
+        {
             if (await context.Users.AnyAsync(u => u.Role == UserRole.Coach, cancellationToken))
             {
                 return;
@@ -78,6 +89,50 @@ namespace Diskie.API.Seeding
                 CreatedAt = now,
                 UpdatedAt = now
             });
+
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Provisions a standalone coach (with its own tenant, season and team) that is
+        /// idempotent on the coach's email, so a usable coach login is available even when
+        /// the initial seed has already run on this database.
+        /// </summary>
+        private static async Task SeedExtraCoachAsync(
+            DiskiDbContext context,
+            UserManager<User> userManager,
+            CancellationToken cancellationToken)
+        {
+            const string coachEmail = "coach.c@diskie.dev";
+
+            if (await context.Users.AnyAsync(u => u.Email == coachEmail, cancellationToken))
+            {
+                return;
+            }
+
+            var now = DateTime.UtcNow;
+
+            var sportTemplate = await context.SportTemplates
+                .FirstOrDefaultAsync(t => t.Name == "soccer", cancellationToken);
+            if (sportTemplate is null)
+            {
+                sportTemplate = NewSportTemplate("soccer", "Soccer", now);
+                context.SportTemplates.Add(sportTemplate);
+            }
+
+            var tenant = NewTenant("Metropolis Athletics", now);
+            var season = NewSeason(tenant.Id, sportTemplate.Id, "2025 Season", now);
+            var team = NewTeam(tenant.Id, season.Id, sportTemplate.Id, "U13 Mixed", now);
+
+            context.Tenants.Add(tenant);
+            context.Seasons.Add(season);
+            context.Teams.Add(team);
+            await context.SaveChangesAsync(cancellationToken);
+
+            var coach = await CreateUserAsync(userManager, tenant.Id, UserRole.Coach, coachEmail, "Casey", "Coach", now);
+
+            context.TeamCoaches.Add(
+                new TeamCoach { TeamId = team.Id, CoachId = coach.Id, Role = "Head Coach", IsPrimary = true });
 
             await context.SaveChangesAsync(cancellationToken);
         }

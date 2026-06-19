@@ -1,0 +1,28 @@
+:root {
+  --coach-navy-900: #0c1733;
+  --coach-navy-800: #15264f;
+  --coach-accent-green: #3bc77c;
+  --coach-accent-yellow: #f3c74d;
+  --coach-accent-red: #ef4444;
+  --coach-accent-blue: #3b82f6;
+  --coach-transition-fast: 300ms ease;
+}
+
+.coach-interactive-card {
+  transition: transform var(--coach-transition-fast), box-shadow var(--coach-transition-fast), border-color var(--coach-transition-fast);
+}
+
+.coach-interactive-card:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 12px 24px rgba(12, 23, 51, 0.16);
+}
+
+[data-quick-action-trigger] {
+  transition: background-color var(--coach-transition-fast), border-color var(--coach-transition-fast), color var(--coach-transition-fast);
+}
+
+@media (max-width: 900px) {
+  .coach-interactive-card:hover {
+    transform: none;
+  }
+}

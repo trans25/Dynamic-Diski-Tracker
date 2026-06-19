@@ -16,7 +16,10 @@ namespace Diskie.API.Mapping
             Phone = entity.Phone,
             Email = entity.Email,
             LogoUrl = entity.LogoUrl,
+            AssignedSportTemplateId = entity.AssignedSportTemplateId,
+            AssignedSportTemplateName = entity.AssignedSportTemplate?.DisplayName,
             IsActive = entity.IsActive,
+            IsApproved = entity.IsApproved,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt
         };
@@ -56,8 +59,11 @@ namespace Diskie.API.Mapping
             Id = entity.Id,
             Name = entity.Name,
             DisplayName = entity.DisplayName,
+            SportType = entity.SportType,
             Icon = entity.Icon,
             Description = entity.Description,
+            MetricDefinitions = entity.MetricDefinitions,
+            PositionDefinitions = entity.PositionDefinitions,
             AssessmentMetrics = entity.AssessmentMetrics,
             MatchStatsFields = entity.MatchStatsFields,
             PositionOptions = entity.PositionOptions,
@@ -130,6 +136,19 @@ namespace Diskie.API.Mapping
             SentAt = entity.SentAt,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt
+        };
+
+        public static PlayerAssessmentViewModel ToViewModel(this Assessment entity) => new()
+        {
+            Id = entity.Id,
+            PlayerId = entity.PlayerId,
+            CoachId = entity.CoachId,
+            TeamId = entity.TeamId,
+            AssessmentDate = entity.AssessmentDate,
+            FreeText = entity.FreeText,
+            OverallRating = entity.OverallRating,
+            IsMatchAssessment = entity.IsMatchAssessment,
+            CreatedAt = entity.CreatedAt
         };
     }
 }

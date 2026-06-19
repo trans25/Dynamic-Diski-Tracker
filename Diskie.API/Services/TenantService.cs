@@ -25,6 +25,17 @@ namespace Diskie.API.Services
             return Task.FromResult(result);
         }
 
+        public Task<IReadOnlyList<TenantViewModel>> GetPendingAsync(CancellationToken cancellationToken = default)
+        {
+            IReadOnlyList<TenantViewModel> result = _repository.Tenant
+                .FindByCondition(t => !t.IsApproved)
+                .OrderBy(t => t.CreatedAt)
+                .Select(t => t.ToViewModel())
+                .ToList();
+
+            return Task.FromResult(result);
+        }
+
         public async Task<TenantViewModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var tenant = await _repository.Tenant.GetByIdAsync(id, cancellationToken);
@@ -43,7 +54,9 @@ namespace Diskie.API.Services
                 Phone = model.Phone,
                 Email = model.Email,
                 LogoUrl = model.LogoUrl,
+                AssignedSportTemplateId = model.AssignedSportTemplateId,
                 IsActive = true,
+                IsApproved = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -69,7 +82,9 @@ namespace Diskie.API.Services
             tenant.Phone = model.Phone;
             tenant.Email = model.Email;
             tenant.LogoUrl = model.LogoUrl;
+            tenant.AssignedSportTemplateId = model.AssignedSportTemplateId;
             tenant.IsActive = model.IsActive;
+            tenant.IsApproved = model.IsApproved;
             tenant.UpdatedAt = DateTime.UtcNow;
 
             _repository.Tenant.Update(tenant);
@@ -78,7 +93,29 @@ namespace Diskie.API.Services
             return tenant.ToViewModel();
         }
 
-        public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task<TenantDeleteResult> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            var tenant = await _repository.Tenant.GetByIdAsync(id, cancellationToken);
+            if (tenant is null)
+            {
+                return TenantDeleteResult.NotFound;
+            }
+
+            var hasUsers = _repository.User
+                .FindByCondition(u => u.TenantId == id)
+                .Any();
+
+            if (hasUsers)
+            {
+                return TenantDeleteResult.HasDependents;
+            }
+
+            _repository.Tenant.Delete(tenant);
+            await _repository.SaveAsync(cancellationToken);
+            return TenantDeleteResult.Deleted;
+        }
+
+        public async Task<bool> ApproveAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var tenant = await _repository.Tenant.GetByIdAsync(id, cancellationToken);
             if (tenant is null)
@@ -86,7 +123,10 @@ namespace Diskie.API.Services
                 return false;
             }
 
-            _repository.Tenant.Delete(tenant);
+            tenant.IsApproved = true;
+            tenant.IsActive = true;
+            tenant.UpdatedAt = DateTime.UtcNow;
+            _repository.Tenant.Update(tenant);
             await _repository.SaveAsync(cancellationToken);
             return true;
         }

@@ -37,6 +37,12 @@ namespace Diskie.DataAccess.Model.Models.Enums
     // Enums/BillingPlan.cs
     public enum BillingPlan { Free, Starter, Pro, Enterprise }
 
+    // Enums/SportType.cs
+    public enum SportType { Football, Rugby, Netball, Cricket }
+
+    // Enums/SportRequestStatus.cs
+    public enum SportRequestStatus { Pending, Approved, Rejected }
+
     // Enums/AnnouncementAudience.cs
     public enum AnnouncementAudience { Team, Players, Guardians, Everyone }
 

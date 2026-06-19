@@ -6,11 +6,13 @@ using Diskie.API.Security;
 using Diskie.API.Seeding;
 using Diskie.API.Services;
 using Diskie.API.Services.Coach;
+using Diskie.API.Services.Metrics;
 using Diskie.DataAccess.Contracts;
 using Diskie.DataAccess.Model.DbModels;
 using Diskie.DataAccess.Model.Models.Enums;
 using Diskie.DataAccess.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -45,6 +47,25 @@ builder.Services
 // Strongly-typed JWT settings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>() ?? new JwtSettings();
+
+// Honor X-Forwarded-Proto/-For from the Azure edge (Front Door / App Service) so
+// Request.IsHttps, HTTPS redirection, HSTS emission, and secure cookies work
+// correctly behind TLS-terminating reverse proxies.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor;
+    // App Service/Front Door inject these; clear the default loopback-only
+    // restriction since the proxy is not on the loopback network.
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+// HSTS hardening: long max-age with subdomains, per Azure baseline.
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(365);
+    options.IncludeSubDomains = true;
+});
 
 // Authentication (JWT Bearer)
 builder.Services
@@ -81,6 +102,20 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole(nameof(UserRole.Coach)));
 });
 
+// CORS for the React (MUI) Super Admin frontend (Diskie.WebAdmin.Mui).
+const string FrontendCorsPolicy = "FrontendCorsPolicy";
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? new[] { "http://localhost:5173", "http://localhost:5174" };
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+        policy.WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
+
 // Data access
 builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 
@@ -91,6 +126,7 @@ builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
 // Application services
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAdminSportService, AdminSportService>();
 builder.Services.AddScoped<ISuperAdminService, SuperAdminService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IAdminUserService, AdminUserService>();
@@ -98,6 +134,10 @@ builder.Services.AddScoped<ITemplateService, TemplateService>();
 builder.Services.AddScoped<IBillingService, BillingService>();
 builder.Services.AddScoped<IHealthService, HealthService>();
 builder.Services.AddScoped<ICoachService, CoachService>();
+builder.Services.AddScoped<ICoachInsightsService, CoachInsightsService>();
+builder.Services.AddScoped<ICoachOperationsService, CoachOperationsService>();
+builder.Services.AddScoped<IMilestoneService, MilestoneService>();
+builder.Services.AddScoped<IMetricsService, MetricsService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -141,6 +181,11 @@ using (var migrationScope = app.Services.CreateScope())
     await migrationContext.Database.MigrateAsync();
 }
 
+// Apply forwarded headers first so the scheme/IP from the Azure edge (Front Door /
+// App Service) is applied before any middleware reads Request.IsHttps or the
+// client IP. Must precede exception handling, HTTPS redirection, and HSTS.
+app.UseForwardedHeaders();
+
 // Global exception handling
 app.UseMiddleware<ExceptionMiddleware>();
 
@@ -157,11 +202,17 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    // HTTPS redirection is only enforced outside Development. The Development
-    // 'http' launch profile binds http only, so redirecting would strip the
-    // Authorization header on the http->https hop and break JWT auth.
+    // Production: enforce TLS. HSTS instructs browsers to use HTTPS only
+    // (max-age=31536000; includeSubDomains per the Azure hardening baseline),
+    // and redirection upgrades any plain-HTTP request. HTTPS redirection is
+    // skipped in Development because the 'http' launch profile binds http only,
+    // so redirecting would strip the Authorization header on the http->https
+    // hop and break JWT auth.
+    app.UseHsts();
     app.UseHttpsRedirection();
 }
+
+app.UseCors(FrontendCorsPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();
