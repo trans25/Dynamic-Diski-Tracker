@@ -11,5 +11,14 @@ namespace Diskie.API.Services
         Task<ForgotPasswordResponseViewModel?> ForgotPasswordAsync(ForgotPasswordRequestViewModel model, CancellationToken cancellationToken = default);
 
         Task<(bool Succeeded, IReadOnlyList<string> Errors)> ResetPasswordAsync(ResetPasswordRequestViewModel model, CancellationToken cancellationToken = default);
+
+        Task<ParentMagicLinkResponseViewModel> RequestParentMagicLinkAsync(
+            ParentMagicLinkRequestViewModel model,
+            string baseUrl,
+            CancellationToken cancellationToken = default);
+
+        Task<ParentAuthResponseViewModel?> ConsumeParentMagicLinkAsync(
+            ParentMagicTokenExchangeRequestViewModel model,
+            CancellationToken cancellationToken = default);
     }
 }

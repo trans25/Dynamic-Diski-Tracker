@@ -15,7 +15,9 @@ namespace Diskie.DataAccess.Model.Models.DbModels
         public string? Phone { get; set; }
         public string? Email { get; set; }
         public string? LogoUrl { get; set; }
+        public Guid? AssignedSportTemplateId { get; set; }
         public bool IsActive { get; set; } = true;
+        public bool IsApproved { get; set; } = false;
 
         // Billing
         public BillingPlan BillingPlan { get; set; } = BillingPlan.Free;
@@ -26,5 +28,7 @@ namespace Diskie.DataAccess.Model.Models.DbModels
         public ICollection<Season> Seasons { get; set; } = new List<Season>();
         public ICollection<Team> Teams { get; set; } = new List<Team>();
         public ICollection<ConsentForm> ConsentForms { get; set; } = new List<ConsentForm>();
+        public SportTemplate? AssignedSportTemplate { get; set; }
+        public ICollection<TenantSportRequest> SportRequests { get; set; } = new List<TenantSportRequest>();
     }
 }

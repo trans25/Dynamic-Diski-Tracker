@@ -27,6 +27,12 @@ public class DiskiDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
     public DbSet<DevelopmentGoal> DevelopmentGoals { get; set; }
     public DbSet<GuardianMessagePreference> GuardianMessagePreferences { get; set; }
     public DbSet<Announcement> Announcements { get; set; }
+    public DbSet<PlayerSkill> PlayerSkills { get; set; }
+    public DbSet<TrainingAttendance> TrainingAttendances { get; set; }
+    public DbSet<PlayerAchievement> PlayerAchievements { get; set; }
+    public DbSet<TacticalLayout> TacticalLayouts { get; set; }
+    public DbSet<Alert> Alerts { get; set; }
+    public DbSet<TenantSportRequest> TenantSportRequests { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -49,6 +55,8 @@ public class DiskiDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<PlayerConsent>().Property(pc => pc.Status).HasConversion<string>();
         modelBuilder.Entity<DevelopmentGoal>().Property(dg => dg.Status).HasConversion<string>();
         modelBuilder.Entity<GuardianMessagePreference>().Property(gmp => gmp.Channel).HasConversion<string>();
+        modelBuilder.Entity<SportTemplate>().Property(st => st.SportType).HasConversion<string>();
+        modelBuilder.Entity<TenantSportRequest>().Property(r => r.Status).HasConversion<string>();
 
         // JSON columns 
         modelBuilder.Entity<User>()
@@ -69,6 +77,12 @@ public class DiskiDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<SportTemplate>()
             .Property(st => st.PositionOptions)
             .HasColumnType("jsonb");
+        modelBuilder.Entity<SportTemplate>()
+            .Property(st => st.MetricDefinitions)
+            .HasColumnType("jsonb");
+        modelBuilder.Entity<SportTemplate>()
+            .Property(st => st.PositionDefinitions)
+            .HasColumnType("jsonb");
         modelBuilder.Entity<Assessment>()
             .Property(a => a.Metrics)
             .HasColumnType("jsonb");
@@ -80,6 +94,13 @@ public class DiskiDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
         modelBuilder.Entity<Attendance>().HasIndex(a => new { a.PlayerId, a.SessionDate, a.TeamId }).IsUnique();
         modelBuilder.Entity<Availability>().HasIndex(a => new { a.PlayerId, a.FixtureId }).IsUnique();
         modelBuilder.Entity<PlayerConsent>().HasIndex(pc => new { pc.PlayerId, pc.ConsentFormId }).IsUnique();
+        modelBuilder.Entity<PlayerSkill>().HasIndex(ps => new { ps.PlayerId, ps.Season, ps.CreatedAt });
+        modelBuilder.Entity<TrainingAttendance>().HasIndex(ta => new { ta.PlayerId, ta.SessionDate }).IsUnique();
+        modelBuilder.Entity<PlayerAchievement>().HasIndex(pa => new { pa.PlayerId, pa.Type, pa.FixtureId });
+        modelBuilder.Entity<TacticalLayout>().HasIndex(tl => tl.MatchId).IsUnique();
+        modelBuilder.Entity<Alert>().HasIndex(a => new { a.PlayerId, a.IsRead, a.CreatedAt });
+        modelBuilder.Entity<Tenant>().HasIndex(t => t.AssignedSportTemplateId);
+        modelBuilder.Entity<TenantSportRequest>().HasIndex(r => new { r.Status, r.RequestedDate });
 
         // Relationships
         modelBuilder.Entity<Team>()
@@ -93,6 +114,24 @@ public class DiskiDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .WithMany(u => u.ViceCaptainedTeams)
             .HasForeignKey(t => t.ViceCaptainId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Tenant>()
+            .HasOne(t => t.AssignedSportTemplate)
+            .WithMany(st => st.AssignedTenants)
+            .HasForeignKey(t => t.AssignedSportTemplateId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<TenantSportRequest>()
+            .HasOne(r => r.Tenant)
+            .WithMany(t => t.SportRequests)
+            .HasForeignKey(r => r.TenantId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TenantSportRequest>()
+            .HasOne(r => r.RequestedSportTemplate)
+            .WithMany(st => st.TenantSportRequests)
+            .HasForeignKey(r => r.RequestedSportTemplateId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         // Assessment has two FKs to User 
         modelBuilder.Entity<Assessment>()
@@ -165,6 +204,52 @@ public class DiskiDbContext : IdentityDbContext<User, IdentityRole<Guid>, Guid>
             .WithMany(u => u.GuardianMessagePreferences)
             .HasForeignKey(gmp => gmp.GuardianId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PlayerSkill>()
+            .HasOne(ps => ps.Player)
+            .WithMany(u => u.PlayerSkills)
+            .HasForeignKey(ps => ps.PlayerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<TrainingAttendance>()
+            .HasOne(ta => ta.Player)
+            .WithMany(u => u.TrainingAttendances)
+            .HasForeignKey(ta => ta.PlayerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PlayerAchievement>()
+            .HasOne(pa => pa.Player)
+            .WithMany(u => u.PlayerAchievements)
+            .HasForeignKey(pa => pa.PlayerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PlayerAchievement>()
+            .HasOne(pa => pa.Fixture)
+            .WithMany()
+            .HasForeignKey(pa => pa.FixtureId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<TacticalLayout>()
+            .Property(tl => tl.Data)
+            .HasColumnType("jsonb");
+
+        modelBuilder.Entity<TacticalLayout>()
+            .HasOne(tl => tl.Match)
+            .WithMany()
+            .HasForeignKey(tl => tl.MatchId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Alert>()
+            .HasOne(a => a.Player)
+            .WithMany(u => u.Alerts)
+            .HasForeignKey(a => a.PlayerId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Alert>()
+            .HasOne(a => a.Match)
+            .WithMany()
+            .HasForeignKey(a => a.MatchId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // Announcement
         modelBuilder.Entity<Announcement>().Property(a => a.Audience).HasConversion<string>();

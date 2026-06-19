@@ -28,5 +28,7 @@ namespace Diskie.DataAccess.Model.Models.ViewModels
         [Url]
         [StringLength(500)]
         public string? LogoUrl { get; set; }
+
+        public Guid? AssignedSportTemplateId { get; set; }
     }
 }

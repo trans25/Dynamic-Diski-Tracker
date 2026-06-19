@@ -74,6 +74,9 @@ namespace Diskie.DataAccess.Model.Migrations
                     b.Property<string>("Gender")
                         .HasColumnType("text");
 
+                    b.Property<string>("IdNumber")
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -179,6 +182,44 @@ namespace Diskie.DataAccess.Model.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.Alert", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("MatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("PlayerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MatchId");
+
+                    b.HasIndex("PlayerId", "IsRead", "CreatedAt");
+
+                    b.ToTable("Alerts");
                 });
 
             modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.Announcement", b =>
@@ -672,6 +713,52 @@ namespace Diskie.DataAccess.Model.Migrations
                     b.ToTable("Injuries");
                 });
 
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.PlayerAchievement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("AwardedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("FixtureId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("IconKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("PlayerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FixtureId");
+
+                    b.HasIndex("PlayerId", "Type", "FixtureId");
+
+                    b.ToTable("PlayerAchievements");
+                });
+
             modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.PlayerConsent", b =>
                 {
                     b.Property<Guid>("PlayerId")
@@ -728,6 +815,47 @@ namespace Diskie.DataAccess.Model.Migrations
                     b.HasIndex("GuardianId");
 
                     b.ToTable("PlayerGuardians");
+                });
+
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.PlayerSkill", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Attacking")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Composure")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Defending")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Passing")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Physicality")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("PlayerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Season")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId", "Season", "CreatedAt");
+
+                    b.ToTable("PlayerSkills");
                 });
 
             modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.Season", b =>
@@ -809,12 +937,24 @@ namespace Diskie.DataAccess.Model.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb");
 
+                    b.Property<string>("MetricDefinitions")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("PositionDefinitions")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
                     b.PrimitiveCollection<string>("PositionOptions")
                         .HasColumnType("jsonb");
+
+                    b.Property<string>("SportType")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -825,6 +965,33 @@ namespace Diskie.DataAccess.Model.Migrations
                         .IsUnique();
 
                     b.ToTable("SportTemplates");
+                });
+
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.TacticalLayout", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Data")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MatchId")
+                        .IsUnique();
+
+                    b.ToTable("TacticalLayouts");
                 });
 
             modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.Team", b =>
@@ -943,6 +1110,9 @@ namespace Diskie.DataAccess.Model.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("AssignedSportTemplateId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("BillingPlan")
                         .HasColumnType("integer");
 
@@ -959,6 +1129,9 @@ namespace Diskie.DataAccess.Model.Migrations
                         .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsApproved")
                         .HasColumnType("boolean");
 
                     b.Property<string>("LogoUrl")
@@ -979,7 +1152,77 @@ namespace Diskie.DataAccess.Model.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AssignedSportTemplateId");
+
                     b.ToTable("Tenants");
+                });
+
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.TenantSportRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("RequestedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RequestedSportTemplateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestedSportTemplateId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("Status", "RequestedDate");
+
+                    b.ToTable("TenantSportRequests");
+                });
+
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.TrainingAttendance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsLate")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsPresent")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PlayerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("SessionDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlayerId", "SessionDate")
+                        .IsUnique();
+
+                    b.ToTable("TrainingAttendances");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -1119,6 +1362,24 @@ namespace Diskie.DataAccess.Model.Migrations
                         .HasForeignKey("TenantId");
 
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.Alert", b =>
+                {
+                    b.HasOne("Diskie.DataAccess.Model.Models.DbModels.Fixture", "Match")
+                        .WithMany()
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Diskie.DataAccess.Model.DbModels.User", "Player")
+                        .WithMany("Alerts")
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Match");
+
+                    b.Navigation("Player");
                 });
 
             modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.Announcement", b =>
@@ -1349,6 +1610,24 @@ namespace Diskie.DataAccess.Model.Migrations
                     b.Navigation("Reporter");
                 });
 
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.PlayerAchievement", b =>
+                {
+                    b.HasOne("Diskie.DataAccess.Model.Models.DbModels.Fixture", "Fixture")
+                        .WithMany()
+                        .HasForeignKey("FixtureId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Diskie.DataAccess.Model.DbModels.User", "Player")
+                        .WithMany("PlayerAchievements")
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Fixture");
+
+                    b.Navigation("Player");
+                });
+
             modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.PlayerConsent", b =>
                 {
                     b.HasOne("Diskie.DataAccess.Model.Models.DbModels.ConsentForm", "ConsentForm")
@@ -1387,6 +1666,17 @@ namespace Diskie.DataAccess.Model.Migrations
                     b.Navigation("Player");
                 });
 
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.PlayerSkill", b =>
+                {
+                    b.HasOne("Diskie.DataAccess.Model.DbModels.User", "Player")
+                        .WithMany("PlayerSkills")
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Player");
+                });
+
             modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.Season", b =>
                 {
                     b.HasOne("Diskie.DataAccess.Model.Models.DbModels.SportTemplate", "SportTemplate")
@@ -1404,6 +1694,17 @@ namespace Diskie.DataAccess.Model.Migrations
                     b.Navigation("SportTemplate");
 
                     b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.TacticalLayout", b =>
+                {
+                    b.HasOne("Diskie.DataAccess.Model.Models.DbModels.Fixture", "Match")
+                        .WithMany()
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Match");
                 });
 
             modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.Team", b =>
@@ -1485,6 +1786,46 @@ namespace Diskie.DataAccess.Model.Migrations
                     b.Navigation("Team");
                 });
 
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.Tenant", b =>
+                {
+                    b.HasOne("Diskie.DataAccess.Model.Models.DbModels.SportTemplate", "AssignedSportTemplate")
+                        .WithMany("AssignedTenants")
+                        .HasForeignKey("AssignedSportTemplateId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("AssignedSportTemplate");
+                });
+
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.TenantSportRequest", b =>
+                {
+                    b.HasOne("Diskie.DataAccess.Model.Models.DbModels.SportTemplate", "RequestedSportTemplate")
+                        .WithMany("TenantSportRequests")
+                        .HasForeignKey("RequestedSportTemplateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Diskie.DataAccess.Model.Models.DbModels.Tenant", "Tenant")
+                        .WithMany("SportRequests")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RequestedSportTemplate");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.TrainingAttendance", b =>
+                {
+                    b.HasOne("Diskie.DataAccess.Model.DbModels.User", "Player")
+                        .WithMany("TrainingAttendances")
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Player");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -1538,6 +1879,8 @@ namespace Diskie.DataAccess.Model.Migrations
 
             modelBuilder.Entity("Diskie.DataAccess.Model.DbModels.User", b =>
                 {
+                    b.Navigation("Alerts");
+
                     b.Navigation("Assessments");
 
                     b.Navigation("AssessmentsGiven");
@@ -1556,15 +1899,21 @@ namespace Diskie.DataAccess.Model.Migrations
 
                     b.Navigation("Injuries");
 
+                    b.Navigation("PlayerAchievements");
+
                     b.Navigation("PlayerConsents");
 
                     b.Navigation("PlayerGuardians");
+
+                    b.Navigation("PlayerSkills");
 
                     b.Navigation("ReportedInjuries");
 
                     b.Navigation("TeamCoaches");
 
                     b.Navigation("TeamPlayers");
+
+                    b.Navigation("TrainingAttendances");
 
                     b.Navigation("ViceCaptainedTeams");
                 });
@@ -1598,9 +1947,13 @@ namespace Diskie.DataAccess.Model.Migrations
                 {
                     b.Navigation("Assessments");
 
+                    b.Navigation("AssignedTenants");
+
                     b.Navigation("Seasons");
 
                     b.Navigation("Teams");
+
+                    b.Navigation("TenantSportRequests");
                 });
 
             modelBuilder.Entity("Diskie.DataAccess.Model.Models.DbModels.Team", b =>
@@ -1623,6 +1976,8 @@ namespace Diskie.DataAccess.Model.Migrations
                     b.Navigation("ConsentForms");
 
                     b.Navigation("Seasons");
+
+                    b.Navigation("SportRequests");
 
                     b.Navigation("Teams");
 

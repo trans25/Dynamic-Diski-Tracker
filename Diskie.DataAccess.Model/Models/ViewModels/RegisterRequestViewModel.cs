@@ -29,6 +29,10 @@ namespace Diskie.DataAccess.Model.Models.ViewModels
         [StringLength(30)]
         public string? Phone { get; set; }
 
+        [StringLength(200)]
+        public string? ClubName { get; set; }
+
         public Guid? TenantId { get; set; }
+        public Guid? RequestedSportTemplateId { get; set; }
     }
 }
