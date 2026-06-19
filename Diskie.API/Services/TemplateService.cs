@@ -38,8 +38,11 @@ namespace Diskie.API.Services
                 Id = Guid.NewGuid(),
                 Name = model.Name,
                 DisplayName = model.DisplayName,
+                SportType = model.SportType,
                 Icon = model.Icon,
                 Description = model.Description,
+                MetricDefinitions = model.MetricDefinitions,
+                PositionDefinitions = model.PositionDefinitions,
                 AssessmentMetrics = model.AssessmentMetrics,
                 MatchStatsFields = model.MatchStatsFields,
                 PositionOptions = model.PositionOptions,
@@ -65,8 +68,11 @@ namespace Diskie.API.Services
 
             template.Name = model.Name;
             template.DisplayName = model.DisplayName;
+            template.SportType = model.SportType;
             template.Icon = model.Icon;
             template.Description = model.Description;
+            template.MetricDefinitions = model.MetricDefinitions;
+            template.PositionDefinitions = model.PositionDefinitions;
             template.AssessmentMetrics = model.AssessmentMetrics;
             template.MatchStatsFields = model.MatchStatsFields;
             template.PositionOptions = model.PositionOptions;

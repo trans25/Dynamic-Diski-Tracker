@@ -22,5 +22,8 @@ namespace Diskie.API.Controllers.SystemAdmin
 
         protected ActionResult NotFoundResponse(string message = "Resource not found") =>
             NotFound(ApiResponse<object>.Fail(message, "404"));
+
+        protected ActionResult ConflictResponse(string message = "Request conflicts with the current state of the resource") =>
+            Conflict(ApiResponse<object>.Fail(message, "409"));
     }
 }

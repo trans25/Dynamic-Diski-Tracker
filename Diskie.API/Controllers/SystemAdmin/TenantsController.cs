@@ -23,6 +23,14 @@ namespace Diskie.API.Controllers.SystemAdmin
             return OkResponse(tenants);
         }
 
+        [HttpGet("pending")]
+        [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<TenantViewModel>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IReadOnlyList<TenantViewModel>>>> GetPending(CancellationToken cancellationToken)
+        {
+            var tenants = await _tenantService.GetPendingAsync(cancellationToken);
+            return OkResponse(tenants);
+        }
+
         [HttpGet("{id:guid}")]
         [ProducesResponseType(typeof(ApiResponse<TenantViewModel>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -61,12 +69,17 @@ namespace Diskie.API.Controllers.SystemAdmin
         [HttpDelete("{id:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         public async Task<ActionResult<ApiResponse<object>>> Delete(Guid id, CancellationToken cancellationToken)
         {
-            var deleted = await _tenantService.DeleteAsync(id, cancellationToken);
-            return deleted
-                ? OkResponse<object>(new { id }, "Tenant deleted")
-                : NotFoundResponse("Tenant not found");
+            var result = await _tenantService.DeleteAsync(id, cancellationToken);
+            return result switch
+            {
+                TenantDeleteResult.Deleted => OkResponse<object>(new { id }, "Tenant deleted"),
+                TenantDeleteResult.HasDependents => ConflictResponse(
+                    "Tenant has existing users and cannot be deleted. Remove or reassign its users first."),
+                _ => NotFoundResponse("Tenant not found")
+            };
         }
 
         [HttpPatch("{id:guid}/suspend")]
@@ -90,6 +103,17 @@ namespace Diskie.API.Controllers.SystemAdmin
                 ? OkResponse<object>(new { id, isActive = true }, "Tenant activated")
                 : NotFoundResponse("Tenant not found");
         }
+
+            [HttpPatch("{id:guid}/approve")]
+            [ProducesResponseType(StatusCodes.Status200OK)]
+            [ProducesResponseType(StatusCodes.Status404NotFound)]
+            public async Task<ActionResult<ApiResponse<object>>> Approve(Guid id, CancellationToken cancellationToken)
+            {
+                var updated = await _tenantService.ApproveAsync(id, cancellationToken);
+                return updated
+                ? OkResponse<object>(new { id, isApproved = true }, "Tenant approved")
+                : NotFoundResponse("Tenant not found");
+            }
 
         [HttpPatch("{tenantId:guid}/users/{userId:guid}/disable")]
         [ProducesResponseType(StatusCodes.Status200OK)]

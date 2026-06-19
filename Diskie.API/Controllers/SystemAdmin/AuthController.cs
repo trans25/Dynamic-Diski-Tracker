@@ -12,10 +12,12 @@ namespace Diskie.API.Controllers.SystemAdmin
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IAdminSportService _adminSportService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IAdminSportService adminSportService)
         {
             _authService = authService;
+            _adminSportService = adminSportService;
         }
 
         [HttpPost("login")]
@@ -47,7 +49,23 @@ namespace Diskie.API.Controllers.SystemAdmin
                 return BadRequest(ApiResponse<object>.Fail(string.Join(" ", errors), "400"));
             }
 
-            return Ok(ApiResponse<AuthResponseViewModel>.Ok(response, "Registration successful"));
+            var submittedForApproval = !model.TenantId.HasValue
+                && !string.IsNullOrWhiteSpace(model.ClubName)
+                && model.RequestedSportTemplateId.HasValue;
+
+            return Ok(ApiResponse<AuthResponseViewModel>.Ok(
+                response,
+                submittedForApproval ? "Registration submitted for approval" : "Registration successful"));
+        }
+
+        [HttpGet("sport-templates")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<SportTemplateViewModel>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IReadOnlyList<SportTemplateViewModel>>>> GetSignupSportTemplates(
+            CancellationToken cancellationToken)
+        {
+            var templates = await _adminSportService.GetActiveTemplatesAsync(cancellationToken);
+            return Ok(ApiResponse<IReadOnlyList<SportTemplateViewModel>>.Ok(templates, "Templates loaded"));
         }
 
         [HttpPost("forgot-password")]
@@ -85,6 +103,35 @@ namespace Diskie.API.Controllers.SystemAdmin
             }
 
             return Ok(ApiResponse<object>.Ok(new object(), "Password has been reset successfully."));
+        }
+
+        [HttpPost("parent/magic-link/request")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<ParentMagicLinkResponseViewModel>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<ParentMagicLinkResponseViewModel>>> RequestParentMagicLink(
+            [FromBody] ParentMagicLinkRequestViewModel model,
+            CancellationToken cancellationToken)
+        {
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var result = await _authService.RequestParentMagicLinkAsync(model, baseUrl, cancellationToken);
+            return Ok(ApiResponse<ParentMagicLinkResponseViewModel>.Ok(result, "Magic link generated."));
+        }
+
+        [HttpPost("parent/magic-link/consume")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<ParentAuthResponseViewModel>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+        public async Task<ActionResult<ApiResponse<ParentAuthResponseViewModel>>> ConsumeParentMagicLink(
+            [FromBody] ParentMagicTokenExchangeRequestViewModel model,
+            CancellationToken cancellationToken)
+        {
+            var result = await _authService.ConsumeParentMagicLinkAsync(model, cancellationToken);
+            if (result is null)
+            {
+                return Unauthorized(ApiResponse<object>.Fail("Magic link is invalid or expired", "401"));
+            }
+
+            return Ok(ApiResponse<ParentAuthResponseViewModel>.Ok(result, "Parent login successful"));
         }
     }
 }

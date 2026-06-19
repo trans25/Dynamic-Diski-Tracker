@@ -30,6 +30,7 @@ namespace Diskie.DataAccess.Model.DbModels
 
             // Player fields
             public DateTime? DateOfBirth { get; set; }
+            public string? IdNumber { get; set; }
             public string? Gender { get; set; }
             public Dictionary<string, object>? MedicalInfo { get; set; }
             public string? EmergencyContactName { get; set; }
@@ -74,5 +75,9 @@ namespace Diskie.DataAccess.Model.DbModels
             public ICollection<DevelopmentGoal> DevelopmentGoals { get; set; } = new List<DevelopmentGoal>();
             public ICollection<DevelopmentGoal> GoalsSet { get; set; } = new List<DevelopmentGoal>();
             public ICollection<PlayerConsent> PlayerConsents { get; set; } = new List<PlayerConsent>();
+            public ICollection<PlayerSkill> PlayerSkills { get; set; } = new List<PlayerSkill>();
+            public ICollection<TrainingAttendance> TrainingAttendances { get; set; } = new List<TrainingAttendance>();
+            public ICollection<PlayerAchievement> PlayerAchievements { get; set; } = new List<PlayerAchievement>();
+            public ICollection<Alert> Alerts { get; set; } = new List<Alert>();
     }
 }

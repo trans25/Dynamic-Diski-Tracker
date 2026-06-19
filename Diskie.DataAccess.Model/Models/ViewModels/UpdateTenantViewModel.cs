@@ -32,6 +32,9 @@ namespace Diskie.DataAccess.Model.Models.ViewModels
         [StringLength(500)]
         public string? LogoUrl { get; set; }
 
+        public Guid? AssignedSportTemplateId { get; set; }
+
         public bool IsActive { get; set; } = true;
+        public bool IsApproved { get; set; }
     }
 }
